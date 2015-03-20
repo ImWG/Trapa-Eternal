@@ -1,0 +1,190 @@
+; Eternal Chess Mini Edition
+; By W. Zhang
+; Feb. 2015
+
+(define drop
+	((verify (in-zone? dropzone))(verify empty?) add)
+)
+
+(define canmove?
+	true
+)
+
+(define Iamred?
+	(friend? red-pos)
+)
+
+(define ADD
+	(if not-neutral?
+		(if enemy? cascade from temp-pos to
+		else
+			(if friend? cascade from temp-pos to)
+		)
+	)
+	(if (in-zone? enemycenter) to 
+		(if (Iamred?) p1 else q1) (while not-empty? next) (create Point)
+	)
+	add
+)
+(define my-piece-in-center
+	(in-zone? center)
+)
+
+
+(define rook-move
+	($1 (verify (canmove?)) (ADD))
+)
+(define rook-move2
+	((verify (my-piece-in-center)) $1 (verify (canmove?)) (ADD))
+)
+(define cannon-move
+	($1 
+		(if empty? (ADD)
+		else
+			$2 (verify not-empty?) (ADD)
+		)
+	)
+)
+(define cannon-move2
+	((verify (my-piece-in-center)) $1 
+		(if empty? add
+		else
+			$2 (verify not-empty?) (ADD)
+		)
+	)
+)
+
+
+(variant
+	(title "Trapa Eternal - 2 Points")
+	(win-condition (Red Blue) (pieces-remaining 2 Point))
+)
+
+(game
+	(title "Trapa Eternal - 3 Points")
+	
+	(opening-sound "Audio\Honk.wav")
+	(release-sound "Audio\Metal3.wav")
+	(move-sound "Audio\Metal3.wav")
+	(change-sound "")
+	
+	(players Red Blue Neutral)
+	(move-priorities out-move normal-move)
+	(turn-order 
+		(Red drop-move)(Blue drop-move)(Red drop-move)(Blue drop-move)
+		repeat
+		(Red expel-move) Red (Red recycle-move)
+		(Blue expel-move) Blue (Blue recycle-move)
+	)
+	(option "pass turn" forced)
+	(option "prevent flipping" 2)
+	(option "recycle captures" true)
+	
+    (board
+        (image "images\Trapa Eternal\Board.bmp")
+		(grid
+			(start-rectangle 29 28 72 71) ; top-left position
+			(dimensions ("a/b/c" (86 11)) ("3/2/1" (11 86)) )
+		)
+		(grid
+			(start-rectangle 293 2 336 45)
+			(dimensions ("p/q" (43 0))
+				("1/2/3/4/5/6" (0 43)))
+			(directions (next 0 1))
+		)
+		
+		(links cw (a3 b3)(b3 c3)(c3 c2)(c2 c1)(c1 b1)(b1 a1)(a1 a2)(a2 a3))
+		(links ccw (a1 b1)(b1 c1)(c1 c2)(c2 c3)(c3 b3)(b3 a3)(a3 a2)(a2 a1))
+		(links diag (a1 b2)(b2 c3))
+		(links cdiag (c3 b2)(b2 a1))
+		(links scan (a1 b1)(b1 c1)(c1 a2)(a2 b2)(b2 c2)(c2 a3)(a3 b3)(b3 c3))
+		
+		(dummy temp-pos red-pos blue-pos temp-pos2)
+		
+		(zone (name center) (players Red) (positions a3))
+		(zone (name center) (players Blue) (positions c1))
+		(zone (name enemycenter) (players Red) (positions c1))
+		(zone (name enemycenter) (players Blue) (positions a3))
+		(zone (name dropzone) (players Red) (positions a2 a3 b3))
+		(zone (name dropzone) (players Blue) (positions b1 c1 c2))
+		(zone (name myzone) (players Red) (positions a2 a3 b3))
+		(zone (name enemyzone) (players Blue) (positions a2 a3 b3))
+		(zone (name myzone) (players Blue) (positions b1 c1 c2))
+		(zone (name enemyzone) (players Red) (positions b1 c1 c2))
+		
+	)
+	
+	(board-setup
+		(Red  (Rook off 2)(Cannon off 2)(Player red-pos))
+		(Blue (Rook off 2)(Cannon off 2)(Player blue-pos))
+		(Neutral (Stone a1 c3))
+	)
+	
+	(piece
+		(name Rook)
+		(image Red "Images\Trapa Eternal\RChariot.bmp"
+				Blue "Images\Trapa Eternal\BChariot.bmp")
+		(drops
+			(move-type drop-move)
+			(drop)
+		)
+		(moves
+			(move-type normal-move)
+			(rook-move cw)(rook-move ccw)(rook-move diag)(rook-move cdiag)
+			(move-type out-move)
+			(rook-move2 cw)(rook-move2 ccw)(rook-move2 diag)(rook-move2 cdiag)
+		)
+	)
+	(piece
+		(name Cannon)
+		(image Red "Images\Trapa Eternal\RCannon.bmp"
+				Blue "Images\Trapa Eternal\BCannon.bmp")
+		(drops
+			(move-type drop-move)
+			(drop)
+		)
+		(moves
+			(move-type normal-move)
+			(cannon-move cw cw)(cannon-move ccw ccw)(cannon-move diag cw)(cannon-move cdiag cw)
+			(cannon-move cw diag)(cannon-move ccw diag)(cannon-move diag ccw)(cannon-move cdiag ccw)
+			(cannon-move cw cdiag)(cannon-move ccw cdiag)(cannon-move diag diag)(cannon-move cdiag cdiag)
+			(move-type out-move)
+			(cannon-move2 cw cw)(cannon-move2 ccw ccw)(cannon-move2 diag cw)(cannon-move2 cdiag cw)
+			(cannon-move2 cw diag)(cannon-move2 ccw diag)(cannon-move2 diag ccw)(cannon-move2 cdiag ccw)
+			(cannon-move2 cw cdiag)(cannon-move2 ccw cdiag)(cannon-move2 diag diag)(cannon-move2 cdiag cdiag)
+		)
+	)
+	(piece
+		(name Stone)
+		(image Neutral "Images\Trapa Eternal\Stone.bmp")
+	)
+	(piece
+		(name Player)(dummy)
+		(moves
+			(move-type recycle-move)
+			(temp-pos from (verify enemy?) a1 (while on-board? (if (and empty? (in-zone? enemyzone)) add) scan))
+			(temp-pos from (verify friend?) a1 (while on-board? (if (and empty? (in-zone? myzone)) add) scan))
+			(move-type expel-move)
+			((if (Iamred?) a3 else c1)
+				from (verify enemy?) a1 (while on-board? (if (and empty? (in-zone? enemyzone)) add) scan))
+		)
+	)
+	(piece
+		(name Point)
+		(image Red "Images\Trapa Eternal\Red.bmp"
+				Blue "Images\Trapa Eternal\Blue.bmp")
+		(dummy)
+	)
+	
+	(win-condition (Red Blue) (pieces-remaining 3 Point))
+)
+
+(variant
+	(title "Trapa Eternal - 4 Points")
+	(win-condition (Red Blue) (pieces-remaining 2 Point))
+)
+
+(variant
+	(title "Trapa Eternal - 5 Points")
+	(win-condition (Red Blue) (pieces-remaining 2 Point))
+)
