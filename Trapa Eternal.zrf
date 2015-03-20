@@ -63,9 +63,9 @@
 (game
 	(title "Trapa Eternal - 3 Points")
 	
-	(opening-sound "Audio\Honk.wav")
-	(release-sound "Audio\Metal3.wav")
-	(move-sound "Audio\Metal3.wav")
+	(click-sound "Audio\\Pickup.wav")
+	(release-sound "Audio\\WoodThunk.wav")
+	(move-sound "Audio\\WoodThunk.wav")
 	(change-sound "")
 	
 	(players Red Blue Neutral)
